@@ -28,10 +28,10 @@ public class BuildInfoDeployer extends AbstractBuildInfoDeployer {
     private final Run build;
     private final Map<String, String> sysVars;
     private final Map<String, String> envVars;
+    private final String platformUrl;
     private ArtifactoryConfigurator configurator;
     private org.jfrog.build.extractor.ci.BuildInfo buildInfo;
     private boolean asyncBuildRetention;
-    private final String platformUrl;
 
     public BuildInfoDeployer(ArtifactoryConfigurator configurator, ArtifactoryManager artifactoryManager,
                              Run build, TaskListener listener, BuildInfo deployedBuildInfo, String platformUrl) throws IOException, InterruptedException {
@@ -66,6 +66,10 @@ public class BuildInfoDeployer extends AbstractBuildInfoDeployer {
         }
 
         addVcsDataToBuild(deployedBuildInfo);
+
+        buildInfo.getVcs().forEach(vcs -> vcs.setMessage(vcs.getMessage().codePoints().filter(Character::isBmpCodePoint)
+                .mapToObj(Character::toChars).map(String::new).collect(Collectors.joining())));
+
     }
 
     private void addVcsDataToBuild(BuildInfo deployedBuildInfo) {
