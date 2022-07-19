@@ -349,7 +349,7 @@ public class ExtractorUtils {
 
         String vcsMessage = getVcsMessage(env);
         if (StringUtils.isNotBlank(vcsMessage)) {
-            configuration.info.setVcsBranch(vcsMessage);
+            configuration.info.setVcsMessage(vcsMessage);
             configuration.publisher.addMatrixParam(BuildInfoFields.VCS_MESSAGE, vcsMessage);
         }
 
