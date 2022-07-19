@@ -22,7 +22,10 @@ import com.google.common.collect.Maps;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.Computer;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.slaves.SlaveComputer;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
@@ -54,6 +57,7 @@ import org.jfrog.hudson.util.publisher.PublisherContext;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Tomer Cohen
@@ -131,8 +135,8 @@ public class ExtractorUtils {
      * @return The vcs message for git.
      */
     public static String getVcsMessage(Map<String, String> env) {
-        String message = env.get(GIT_MESSAGE);
-        return message != null ? message : "";
+        return Optional.ofNullable(env.get(GIT_MESSAGE))
+                .map(ExtractorUtils::filterUtf8Characters).orElse("");
     }
 
     public static void addVcsDetailsToEnv(FilePath filePath, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
@@ -141,7 +145,8 @@ public class ExtractorUtils {
         env.put(GIT_URL, StringUtils.defaultIfEmpty(vcs.getUrl(), ""));
         // Encoding to make sure value will be treated as a single property and contain all special chars
         env.put(GIT_BRANCH, escapeProperty(StringUtils.defaultIfEmpty(vcs.getBranch(), "")));
-        env.put(GIT_MESSAGE, escapeProperty(StringUtils.defaultIfEmpty(vcs.getMessage(), "")));
+        final String message = filterUtf8Characters(escapeProperty(vcs.getMessage()));
+        env.put(GIT_MESSAGE, StringUtils.defaultIfEmpty(message,""));
     }
 
     /**
@@ -378,7 +383,7 @@ public class ExtractorUtils {
 
         String vcsMessage = getVcsMessage(env);
         if (StringUtils.isNotBlank(vcsMessage)) {
-            configuration.info.setVcsBranch(vcsMessage);
+            configuration.info.setVcsMessage(vcsMessage);
             configuration.publisher.addMatrixParam(BuildInfoFields.VCS_MESSAGE, vcsMessage);
         }
 
@@ -724,5 +729,10 @@ public class ExtractorUtils {
                 return tempDir;
             }
         });
+    }
+
+    private static String filterUtf8Characters(String message) {
+        return message.codePoints().filter(Character::isBmpCodePoint).mapToObj(Character::toChars)
+                .map(String::new).collect(Collectors.joining());
     }
 }
