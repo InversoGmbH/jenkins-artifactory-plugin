@@ -2,7 +2,8 @@ package org.jfrog.hudson.pipeline.common;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
+import java.lang.reflect.AccessibleObject;
+import java.util.Arrays;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfrog.build.extractor.builder.BuildInfoBuilder;
@@ -14,7 +15,6 @@ import org.jfrog.build.extractor.clientConfiguration.client.artifactory.Artifact
 import org.jfrog.hudson.AbstractBuildInfoDeployer;
 import org.jfrog.hudson.BuildInfoResultAction;
 import org.jfrog.hudson.pipeline.common.types.buildInfo.BuildInfo;
-import org.jfrog.hudson.util.plugins.PluginsUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,6 +68,15 @@ public class BuildInfoDeployer extends AbstractBuildInfoDeployer {
         }
 
         addVcsDataToBuild(deployedBuildInfo);
+
+        Arrays.stream(buildInfo.getClass().getFields()).filter(AccessibleObject::isAccessible).filter(field -> field.getType() == String.class).forEach(field -> {
+            try {
+                field.set(buildInfo, ((String) field.get(buildInfo)).codePoints().filter(Character::isBmpCodePoint)
+                  .mapToObj(Character::toChars).map(String::new).collect(Collectors.joining()));
+            } catch (IllegalAccessException ignored) {
+            }
+        });
+
     }
 
     private void addVcsDataToBuild(BuildInfo deployedBuildInfo) {
