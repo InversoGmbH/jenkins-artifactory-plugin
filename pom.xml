@@ -25,7 +25,7 @@
     </parent>
 
     <artifactId>artifactory</artifactId>
-    <version>3.16.x-SNAPSHOT</version>
+    <version>3.16.3-inverso</version>
     <packaging>hpi</packaging>
     <name>Jenkins Artifactory Plugin</name>
     <description>Integrates Artifactory to Jenkins</description>
@@ -692,6 +692,11 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
                     <version>1.18</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jenkins-ci.tools</groupId>
+                    <artifactId>maven-hpi-plugin</artifactId>
+                    <version>3.15</version>
                 </plugin>
             </plugins>
         </pluginManagement>
