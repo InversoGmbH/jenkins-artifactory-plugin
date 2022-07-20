@@ -2,8 +2,6 @@ package org.jfrog.hudson.pipeline.common;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import java.lang.reflect.AccessibleObject;
-import java.util.Arrays;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfrog.build.extractor.builder.BuildInfoBuilder;
@@ -30,10 +28,10 @@ public class BuildInfoDeployer extends AbstractBuildInfoDeployer {
     private final Run build;
     private final Map<String, String> sysVars;
     private final Map<String, String> envVars;
+    private final String platformUrl;
     private ArtifactoryConfigurator configurator;
     private org.jfrog.build.extractor.ci.BuildInfo buildInfo;
     private boolean asyncBuildRetention;
-    private final String platformUrl;
 
     public BuildInfoDeployer(ArtifactoryConfigurator configurator, ArtifactoryManager artifactoryManager,
                              Run build, TaskListener listener, BuildInfo deployedBuildInfo, String platformUrl) throws IOException, InterruptedException {
@@ -69,13 +67,16 @@ public class BuildInfoDeployer extends AbstractBuildInfoDeployer {
 
         addVcsDataToBuild(deployedBuildInfo);
 
-        Arrays.stream(buildInfo.getClass().getFields()).filter(AccessibleObject::isAccessible).filter(field -> field.getType() == String.class).forEach(field -> {
-            try {
-                field.set(buildInfo, ((String) field.get(buildInfo)).codePoints().filter(Character::isBmpCodePoint)
-                  .mapToObj(Character::toChars).map(String::new).collect(Collectors.joining()));
-            } catch (IllegalAccessException ignored) {
-            }
-        });
+//        Arrays.stream(buildInfo.getClass().getFields()).filter(AccessibleObject::isAccessible).filter(field -> field.getType() == String.class).forEach(field -> {
+//            try {
+//                field.set(buildInfo, ((String) field.get(buildInfo)).codePoints().filter(Character::isBmpCodePoint)
+//                  .mapToObj(Character::toChars).map(String::new).collect(Collectors.joining()));
+//            } catch (IllegalAccessException ignored) {
+//            }
+//        });
+
+        buildInfo.getVcs().forEach(vcs -> vcs.setMessage(vcs.getMessage().codePoints().filter(Character::isBmpCodePoint)
+                .mapToObj(Character::toChars).map(String::new).collect(Collectors.joining())));
 
     }
 
